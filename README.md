@@ -1,10 +1,6 @@
-# NetArchitect: Recommendation & Config Engine
-### Algorithmic Network Planning & Self-Explaining Architecture Engine
-**Course Code:** CIC-307 • Computer Networks Mini-Project  
-**Weight:** 100 Points | **Submission Deadline:** 10 November 2026  
-**Status:** Complete & Validated (`state.yaml` tracked)
 
----
+
+
 
 ## 📌 Project Overview
 **NetArchitect** is an algorithmic network planning and self-explaining architecture engine developed in Python 3.10+. It ingests enterprise network parameters (preset scenarios or custom JSON topologies), runs deterministic algorithmic rule engines adhering strictly to IEEE and RFC networking standards, and produces:
@@ -244,5 +240,6 @@ c:\Users\DELL\CN_Mini_Project\
 └── tests/                           # Automated pytest suite
     └── test_all.py                  # 61 unit and integration tests
 ```
-#   M i n i - P R O J E C T  
+#   M i n i - P R O J E C T 
+ 
  
