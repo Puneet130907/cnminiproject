@@ -1,245 +1,270 @@
+# NetArchitect
 
+NetArchitect is an algorithmic network planning and self-explaining architecture engine built in Python 3.10+. It ingests enterprise network parameters from preset scenarios or custom topology JSON, validates them against network design constraints, and outputs copy-paste-ready Cisco IOS/IOS-XE configurations with explainable engineering rationale.
 
+It is designed for network engineers, architects, and automation teams who want a fast path from topology design to deployable network configuration without sacrificing correctness, standards awareness, or documentation quality.
 
+## Why NetArchitect?
 
-## 📌 Project Overview
-**NetArchitect** is an algorithmic network planning and self-explaining architecture engine developed in Python 3.10+. It ingests enterprise network parameters (preset scenarios or custom JSON topologies), runs deterministic algorithmic rule engines adhering strictly to IEEE and RFC networking standards, and produces:
-1. **Dynamic Bitwise VLSM Subnet Allocations** with mathematically verified zero-collision address spaces and inverted wildcard masks.
-2. **Layer 1 Physical Media Recommendations** (Cat6a copper vs OM4 MMF vs OS2 SMF) with optical link-budget loss/margin calculations.
-3. **Layer 3 Routing Protocol Determinations** (Single-Area OSPFv2, Multi-Area OSPFv2, and eBGP with route redistribution).
-4. **100% Copy-Paste Ready Cisco IOS / IOS-XE Configurations** for Core Routers (Router-on-a-Stick with IEEE 802.1Q subinterfaces, OSPF/BGP processes, extended perimeter ACLs, IPsec VTI tunnels) and Core Switches (SVIs, 802.1Q trunks with explicit allowed-VLAN pruning, Rapid-PVST+, VTP transparent).
-5. **Self-Explaining Engineering Rationales** citing physical limits, mathematical equations, and relevant standards (IEEE 802.3an, IEEE 802.3ae, IEEE 802.1Q, RFC 1918, RFC 2328, RFC 4271).
+- Dynamic bitwise VLSM subnet allocation with mathematically verified zero-overlap behavior
+- Layer 1 media selection for Cat6a, OM4 MMF, and OS2 SMF
+- Optical link-budget validation with loss and margin calculation
+- Layer 3 routing decisions for OSPF and eBGP environments
+- Cisco IOS configuration generation for VLAN trunking, subinterfaces, ACLs, and IPsec tunnels
+- Explainable design logic based on standards and engineering rules
+- Rich CLI and FastAPI-based dashboard for interactive usage
 
 ---
 
-## 🏗️ System Architecture & Data Flow
+## System Architecture
 
-```
-                      ┌────────────────────────────────────────┐
-                      │             INPUT INGESTION            │
-                      │   • Preset Profile JSON (1, 2, or 3)   │
-                      │   • Custom Topology JSON Input         │
-                      └───────────────────┬────────────────────┘
-                                          │
+```text
+                    ┌────────────────────────────────────────┐
+                    │            INPUT INGESTION             │
+                    │ • Preset profile JSON                 │
+                    │ • Custom topology JSON                │
+                    └───────────────────┬────────────────────┘
+                                        │
                      ┌────────────────────┴────────────────────┐
                      ▼                                         ▼
-       ┌───────────────────────────┐             ┌───────────────────────────┐
-       │   LAYER 1 MEDIA ENGINE    │             │     LAYER 3 VLSM ENGINE   │
-       │ • Distance Thresholds     │             │ • Descending Sort         │
-       │ • Cat6a vs OM4 vs OS2     │             │ • Power-of-2 Sizing       │
-       │ • Physical Boundary Check │             │ • Non-Overlapping Blocks  │
-       │ • Optical Budget (dB/km)  │             │ • Wildcard Mask Inversion │
-       └─────────────┬─────────────┘             └─────────────┬─────────────┘
-                     │                                         │
-                     └────────────────────┬────────────────────┘
-                                          │
-                                          ▼
-                             ┌───────────────────────────┐
-                             │    L3 ROUTING ENGINE      │
-                             │ • Subnet Count Threshold  │
-                             │ • Multi-Site / Multi-AS   │
-                             │ • OSPF Area 0 vs Multi    │
-                             │ • eBGP Peering & ASN      │
-                             └────────────┬──────────────┘
-                                          │
-                                          ▼
-                      ┌────────────────────────────────────────┐
-                      │          EXPLAINABLE EXPORTER          │
-                      │ • Copy-Paste Ready Cisco IOS Config    │
-                      │ • Router-on-a-Stick dot1Q Subinterfaces│
-                      │ • Perimeter ACLs with Wildcard Masks   │
-                      │ • Architectural Rationale Report (.md) │
-                      └───────────────────┬────────────────────┘
-                                          │
+          ┌───────────────────────────┐          ┌───────────────────────────┐
+          │     LAYER 1 MEDIA ENGINE   │          │      LAYER 3 VLSM ENGINE   │
+          │ • Distance thresholds      │          │ • Descending sort         │
+          │ • Cat6a vs OM4 vs OS2     │          │ • Power-of-2 sizing       │
+          │ • Physical boundary check │          │ • Non-overlapping blocks  │
+          │ • Optical budget analysis │          │ • Wildcard inversion      │
+          └─────────────┬─────────────┘          └─────────────┬─────────────┘
+                        │                                        │
+                        └────────────────────┬────────────────────┘
+                                             │
+                                             ▼
+                               ┌───────────────────────────┐
+                               │      L3 ROUTING ENGINE     │
+                               │ • Subnet count threshold  │
+                               │ • Multi-site / multi-AS   │
+                               │ • OSPF Area 0 vs multi   │
+                               │ • eBGP peering & ASN     │
+                               └────────────┬──────────────┘
+                                             │
+                                             ▼
+                    ┌────────────────────────────────────────┐
+                    │        EXPLAINABLE EXPORTER           │
+                    │ • Cisco IOS config generation         │
+                    │ • Router-on-a-stick VLAN subinterfaces │
+                    │ • Policy ACL generation               │
+                    │ • Architecture rationale report       │
+                    └───────────────────┬────────────────────┘
+                                        │
                      ┌────────────────────┴────────────────────┐
                      ▼                                         ▼
-       ┌───────────────────────────┐             ┌───────────────────────────┐
-       │         RICH CLI          │             │     FASTAPI DASHBOARD     │
-       │ • Interactive Terminal    │             │ • Modern Dark-Mode UI     │
-       │ • Colorful Status Tables  │             │ • Real-time REST API      │
-       │ • Direct .cfg File Export │             │ • One-Click .cfg Download │
-       └───────────────────────────┘             └───────────────────────────┘
+          ┌───────────────────────────┐          ┌───────────────────────────┐
+          │         RICH CLI          │          │     FASTAPI DASHBOARD     │
+          │ • Interactive terminal    │          │ • Modern dark UI         │
+          │ • Colorized status tables│          │ • REST API              │
+          │ • Direct .cfg export     │          │ • One-click download    │
+          └───────────────────────────┘          └───────────────────────────┘
 ```
 
 ---
 
-## 🎯 Preset Scenarios
+## Preset Scenarios
 
-NetArchitect comes packaged with three enterprise-scale preset scenarios:
+NetArchitect ships with three enterprise-scale scenarios:
 
-### Profile 1: Campus LAN (`campus_lan.json`)
-- **Scale:** 3 Buildings, link distance < 400 m.
-- **Capacity:** 1,600 endpoints across 10 subnets (Engineering, Labs, Faculty, Library, VoIP, CCTV, APs, Server Farm, Management).
-- **Root Prefix:** `10.10.0.0/16`
-- **Key Technologies:** Cat6a copper (access runs ≤ 100m) vs OM4 MMF (backbone runs 101–400m), IEEE 802.1Q VLANs, Rapid-PVST+, Single-Area OSPFv2 Area 0, Router-on-a-Stick with subinterfaces, perimeter firewall ACLs.
-- **Export:** `exports/profile1_campus_lan_cisco.cfg`
+### 1) Campus LAN (`campus_lan.json`)
 
-### Profile 2: Metro MAN (`metro_man.json`)
-- **Scale:** FinTech HQ + 2 Remote Branch / Data Center sites (15 km to 35 km).
-- **Capacity:** 450 users across 9 subnets (Trading Floor, Back Office, Colo, Branch 1, Branch 2, VoIP, Management).
-- **Root Prefix:** `172.16.0.0/18`
-- **Key Technologies:** OS2 Single-Mode Fiber (10GBASE-LR at 15km, 10GBASE-ER at 35km), optical link-budget power calculations, Single-Area OSPF with sub-5ms latency topology.
-- **Export:** `exports/profile2_metro_man_cisco.cfg`
+- Scale: 3 buildings, link distance under 400 m
+- Capacity: 1,600 endpoints across 10 subnets
+- Root prefix: `10.10.0.0/16`
+- Technologies: Cat6a copper, OM4 MMF, IEEE 802.1Q VLANs, Rapid-PVST+, single-area OSPFv2, router-on-a-stick
+- Output: `exports/profile1_campus_lan_cisco.cfg`
 
-### Profile 3: Global WAN (`global_wan.json`)
-- **Scale:** 4 Global Cities (London, New York, Tokyo, Singapore) + AWS VPC / Azure VNet cloud integration.
-- **Capacity:** 2,000+ IoT scanners and corporate endpoints across 12 subnets.
-- **Root Prefix:** `192.168.0.0/16`
-- **Key Technologies:** Multi-Area OSPF backbone (Area 0, 1, 2, 3), eBGP peering (AS 65001), route summarization, Route-based IPsec VPN (VTI / IKEv2) tunnels, perimeter extended ACLs.
-- **Export:** `exports/profile3_global_wan_cisco.cfg`
+### 2) Metro MAN (`metro_man.json`)
 
----
+- Scale: FinTech HQ + 2 remote branch/data center sites
+- Capacity: 450 users across 9 subnets
+- Root prefix: `172.16.0.0/18`
+- Technologies: OS2 single-mode fiber, optical link-budget analysis, single-area OSPF
+- Output: `exports/profile2_metro_man_cisco.cfg`
 
-## ⚙️ Algorithmic Rules & Boundary Enforcements
+### 3) Global WAN (`global_wan.json`)
 
-| Domain | Rule / Boundary Condition | Algorithmic Enforcement |
-|:---|:---|:---|
-| **L1 Media** | Run $\le 100\text{ m}$ | Selects Cat6a (10GBASE-T, IEEE 802.3an) |
-| **L1 Media** | Run $101\text{ m} - 400\text{ m}$ | Selects OM4 MMF (10GBASE-SR, 850nm VCSEL, IEEE 802.3ae) |
-| **L1 Media** | Run $> 400\text{ m}$ | Selects OS2 SMF (10GBASE-LR/ER, 1310/1550nm laser) |
-| **L1 Boundary** | Copper forced on link $> 100\text{ m}$ | Raises `PhysicalDistanceViolationError` immediately |
-| **L1 Budget** | Fiber optical power budget | $\text{Margin} = P_{tx} - P_{rx\_sens} - (\alpha \cdot d + \text{losses}) > 0\text{ dB}$ |
-| **L3 VLSM** | Host requirement ordering | Sorted **DESCENDING** before allocation to eliminate fragmentation |
-| **L3 VLSM** | Address space capacity | Raises `SubnetExhaustionError` if required addresses exceed root block |
-| **L3 VLSM** | Subnet overlap prevention | Bitwise boundary verification guarantees zero overlapping subnets |
-| **L3 VLSM** | Wildcard mask calculation | Bitwise NOT: $\text{Wildcard} = \text{Mask} \oplus \text{0xFFFFFFFF}$ |
-| **L3 Routing** | Single AS, $< 50$ subnets | Single-Area OSPFv2 (Area 0, RFC 2328) |
-| **L3 Routing** | Multi-site / $> 50$ subnets | Multi-Area OSPFv2 with Area 0 backbone |
-| **L3 Routing** | Multi-AS / Cloud VPC | Multi-Area OSPF + eBGP redistribution (RFC 4271) |
-| **Cisco IOS** | Switch trunking | `switchport trunk allowed vlan ...` (explicit pruning; no unconstrained trunks) |
-| **Cisco IOS** | Router-on-a-stick | `encapsulation dot1Q <vlan_id>` before `ip address`; parent port `no shutdown` |
-| **Cisco IOS** | Security policies | Extended ACLs generated using exact bitwise inverted wildcard masks |
+- Scale: 4 global cities with cloud integration
+- Capacity: 2,000+ endpoints across 12 subnets
+- Root prefix: `192.168.0.0/16`
+- Technologies: multi-area OSPF, eBGP, route summarization, route-based IPsec VPN tunnels
+- Output: `exports/profile3_global_wan_cisco.cfg`
 
 ---
 
-## 🚀 Installation & Quick Start
+## Design Rules and Boundary Conditions
 
-### 1. Clone & Install Dependencies
+| Domain | Rule / Boundary Condition | Enforcement |
+| --- | --- | --- |
+| Layer 1 Media | Run <= 100 m | Selects Cat6a (10GBASE-T, IEEE 802.3an) |
+| Layer 1 Media | Run 101 m - 400 m | Selects OM4 MMF (10GBASE-SR, IEEE 802.3ae) |
+| Layer 1 Media | Run > 400 m | Selects OS2 SMF (10GBASE-LR/ER) |
+| Layer 1 Boundary | Copper forced on link > 100 m | Raises `PhysicalDistanceViolationError` |
+| Layer 1 Budget | Fiber optical power budget | Margin must remain > 0 dB |
+| Layer 3 VLSM | Host requirement ordering | Sorted descending before allocation |
+| Layer 3 VLSM | Address space capacity | Raises `SubnetExhaustionError` if required addresses exceed root block |
+| Layer 3 VLSM | Subnet overlap prevention | Bitwise verification guarantees zero overlap |
+| Layer 3 Routing | Single AS / < 50 subnets | Single-area OSPFv2 |
+| Layer 3 Routing | Multi-site / > 50 subnets | Multi-area OSPFv2 |
+| Layer 3 Routing | Multi-AS / cloud VPC | OSPF + eBGP redistribution |
+| Cisco IOS | Switch trunking | Explicit VLAN pruning using `switchport trunk allowed vlan` |
+| Cisco IOS | Router-on-a-stick | `encapsulation dot1Q` precedes `ip address` |
+| Cisco IOS | Security policies | Extended ACLs generated using wildcard masks |
+
+---
+
+## Installation and Quick Start
+
+### 1. Clone and install dependencies
+
 ```powershell
-# Navigate to workspace
 cd c:\Users\DELL\CN_Mini_Project
-
-# Install required packages
 pip install -r requirements.txt
 ```
 
-### 2. Run via Rich CLI
+### 2. Run via the Rich CLI
+
 ```powershell
-# List available scenario presets
+# List available preset scenarios
 python -m netarchitect.cli list-presets
 
-# Run a preset scenario (e.g. Campus LAN)
+# Run a preset scenario
 python -m netarchitect.cli run --preset campus_lan
 
-# Run with custom JSON file
+# Run using a custom topology JSON file
 python -m netarchitect.cli run --file path/to/custom_scenario.json
 
 # Validate a scenario JSON file
 python -m netarchitect.cli validate netarchitect/presets/campus_lan.json
 ```
 
-### 3. Launch the Interactive Web Dashboard
-```powershell
-# Start FastAPI dev server
-python -m netarchitect.web
+### 3. Launch the interactive web dashboard
 
-# Open in browser:
-# http://127.0.0.1:8000
+```powershell
+python -m netarchitect.web
 ```
-The web dashboard features:
-- One-click preset scenario loader (Campus LAN, Metro MAN, Global WAN).
-- Full VLSM allocation breakdown table with color-coded utilization efficiency badges.
-- Physical media decision table with transceiver and standard citations.
-- Optical link-budget table with loss calculations and link viability status.
-- Copy-to-Clipboard and Direct Download buttons for Cisco IOS `.cfg` files.
+
+Then open:
+
+```text
+http://127.0.0.1:8000
+```
+
+The dashboard includes:
+
+- one-click preset loader
+- VLSM allocation breakdown tables
+- physical media recommendation tables
+- optical link-budget analysis
+- copy-to-clipboard and direct `.cfg` download actions
 
 ---
 
-## 🧪 Automated Test Suite (pytest)
+## Automated Test Suite
 
-The test suite covers 100% of the boundary conditions mandated by `state.yaml`:
+The project includes a pytest suite for required design boundaries and routing logic.
+
 ```powershell
 python -m pytest tests/ -v
 ```
 
-### Test Coverage Highlights (61 Test Cases Passed):
-- `TestMediaEngine`:
-  - Cat6a within and at 100m boundary.
-  - OM4 MMF at 101m and 400m boundary.
-  - OS2 SMF at 401m and 15 km long-haul.
-  - `PhysicalDistanceViolationError` when copper > 100m or MMF > 400m.
-  - Optical budget viability and margin verification.
-  - Forced OS2 SMF on short links without `KeyError`.
-- `TestVLSMEngine`:
-  - Descending sort order verification.
-  - Mathematically verified zero address overlap.
-  - Comprehensive subnet attribute validation (Network, CIDR, Mask, Wildcard, Gateway, Broadcast, Hosts, Wastage, Efficiency).
-  - `SubnetExhaustionError` trigger on root prefix overflow.
-- `TestWildcardMask`:
-  - Arbitrary prefix wildcard calculations (/8, /13, /16, /18, /20, /24, /25, /26, /27, /28, /29, /30, /32).
-  - Bitwise complement invariant: $\text{Mask} \lor \text{Wildcard} = \text{0xFFFFFFFF}$ and $\text{Mask} \land \text{Wildcard} = 0$.
-- `TestRoutingEngine`:
-  - Single-Area OSPF vs Multi-Area OSPF threshold switching.
-  - eBGP triggers for Multi-AS and Cloud VPC.
-- `TestPresetIntegration`:
-  - End-to-end execution for Campus LAN, Metro MAN, and Global WAN.
-  - Cisco IOS configuration syntax verification.
-  - Router subinterface `encapsulation dot1Q` presence.
-  - Extended ACL bitwise wildcard mask integration.
-  - IPsec VPN tunnel and crypto profile validation.
+### Coverage highlights
+
+- `TestMediaEngine`
+  - Cat6a within and at the 100 m boundary
+  - OM4 MMF at 101 m and 400 m
+  - OS2 SMF beyond 400 m and long-haul links
+  - `PhysicalDistanceViolationError` for invalid copper/MMF assignments
+  - optical margin and viability verification
+- `TestVLSMEngine`
+  - descending sort order validation
+  - mathematically verified zero-overlap subnet allocation
+  - subnet attribute validation
+  - `SubnetExhaustionError` on overflow
+- `TestWildcardMask`
+  - wildcard calculations for common CIDR masks
+  - complement invariants and bitwise correctness
+- `TestRoutingEngine`
+  - single-area vs multi-area OSPF decision switching
+  - eBGP trigger conditions for multi-AS and cloud VPC designs
+- `TestPresetIntegration`
+  - end-to-end validation for Campus LAN, Metro MAN, and Global WAN
+  - Cisco syntax verification
+  - router subinterface generation
+  - ACL and IPsec validation
 
 ---
 
-## 🛡️ AI Defense & Code Auditing Log
-In strict compliance with Section 4 of the CIC-307 specification, complete post-mortems of AI-suggested networking code defects are documented in [`ai_audit_log.md`](file:///c:/Users/DELL/CN_Mini_Project/ai_audit_log.md):
-1. **Router-on-a-Stick Subinterface IEEE 802.1Q Omission:** AI models omit `encapsulation dot1Q` prior to `ip address`, causing Cisco IOS CLI syntax errors and dropping tagged frames.
-2. **Optical Transceiver Mismatch & KeyError on Forced SMF:** AI selector failed to update transceiver types when single-mode fiber was forced on short links, leading to runtime crashes and incorrect attenuation math.
-3. **Inverted Wildcard Mask Confusion in ACLs:** AI models confuse subnet masks with inverted wildcard masks, creating severe firewall bypass vulnerabilities.
-4. **Terminal Encoding Crashes on Windows:** Rich CLI panel rendering of Unicode emojis on default `cp1252` Windows consoles repaired with UTF-8 stream reconfiguration.
+## AI Defense and Code Auditing
+
+NetArchitect follows strict AI safety and auditing expectations. Key post-mortems for networking defects are documented in [`ai_audit_log.md`](ai_audit_log.md).
+
+Important issues tracked include:
+
+1. Missing `encapsulation dot1Q` on router-on-a-stick interfaces
+2. Incorrect media selection and forced-SMF runtime failure
+3. Wildcard-mask confusion in ACL generation
+4. Unicode/terminal encoding issues in Windows CLI output
 
 ---
 
-## 📁 Repository Directory Structure
+## Repository Structure
 
-```
-c:\Users\DELL\CN_Mini_Project\
-├── ai_audit_log.md                  # Mandatory AI Defense & Code Auditing Log (20 Pts)
-├── README.md                        # Project architecture & execution manual
-├── requirements.txt                 # Python dependencies
-├── state.yaml                       # Operational & architectural state tracking file
-├── exports/                         # Generated verification export deliverables
+```text
+Mini-PROJECT/
+├── ai_audit_log.md
+├── README.md
+├── requirements.txt
+├── state.yaml
+├── exports/
 │   ├── profile1_campus_lan_cisco.cfg
 │   ├── profile1_campus_lan_rationale.md
 │   ├── profile2_metro_man_cisco.cfg
 │   ├── profile2_metro_man_rationale.md
 │   ├── profile3_global_wan_cisco.cfg
 │   └── profile3_global_wan_rationale.md
-├── netarchitect/                    # Core Python package
+├── netarchitect/
 │   ├── __init__.py
-│   ├── __main__.py                  # CLI launcher (`python -m netarchitect`)
-│   ├── cli.py                       # Rich + Typer interactive terminal UI
-│   ├── exceptions.py                # Domain exceptions (PhysicalDistanceViolationError, SubnetExhaustionError)
-│   ├── models.py                    # Pydantic data schemas & contracts
-│   ├── orchestrator.py              # Pipeline execution coordinator & exporters
-│   ├── web.py                       # FastAPI web dashboard backend
-│   ├── engines/                     # Algorithmic decision engines
+│   ├── __main__.py
+│   ├── cli.py
+│   ├── exceptions.py
+│   ├── models.py
+│   ├── orchestrator.py
+│   ├── web.py
+│   ├── engines/
 │   │   ├── __init__.py
-│   │   ├── config_generator.py      # Cisco IOS / IOS-XE configuration generator
-│   │   ├── media_engine.py          # L1 Media & optical link-budget engine
-│   │   ├── routing_engine.py        # L3 OSPF & BGP protocol engine
-│   │   └── vlsm_engine.py           # Bitwise VLSM subnet allocator
-│   ├── presets/                     # Pre-packaged scenario data
+│   │   ├── config_generator.py
+│   │   ├── media_engine.py
+│   │   ├── routing_engine.py
+│   │   └── vlsm_engine.py
+│   ├── presets/
 │   │   ├── __init__.py
 │   │   ├── campus_lan.json
 │   │   ├── metro_man.json
 │   │   └── global_wan.json
-│   └── static/                      # Web dashboard frontend assets
-│       ├── app.js                   # Dashboard logic & API connector
-│       ├── index.html               # Responsive HTML5 layout
-│       └── style.css                # Dark-mode glassmorphism design system
-└── tests/                           # Automated pytest suite
-    └── test_all.py                  # 61 unit and integration tests
+│   └── static/
+│       ├── app.js
+│       ├── index.html
+│       └── style.css
+└── tests/
+    └── test_all.py
 ```
-#   M i n i - P R O J E C T 
- 
- 
+
+---
+
+## Notes
+
+This project is intended for simulation, design validation, and rapid network architecture prototyping rather than as a production networking appliance. It emphasizes correctness, engineering explainability, and standards-aware configuration generation.
+
+## License
+
+This repository snapshot does not include a license file. If you plan to distribute or reuse the project, add an explicit license such as MIT or Apache-2.0.
+
+## Contribution
+
+Contributions and issue reports are welcome. For feature requests or bug reports, open an issue in the repository and include the relevant preset or topology JSON used to reproduce the problem.
